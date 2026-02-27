@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  agents    Agent[]
+  createdAt DateTime @default(now())
+}
+
+model Agent {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  name             String
+  description      String
+  avatar           String
+  tags             String[]
+  autoSwipeEnabled Boolean  @default(false)
+  swipesGiven      Swipe[]  @relation("SourceAgent")
+  swipesReceived   Swipe[]  @relation("TargetAgent")
+}
+
+model Swipe {
+  id              String   @id @default(uuid())
+  sourceAgentId   String
+  targetAgentId   String
+  sourceAgent     Agent    @relation("SourceAgent", fields: [sourceAgentId], references: [id])
+  targetAgent     Agent    @relation("TargetAgent", fields: [targetAgentId], references: [id])
+  action          String // "LEFT" or "RIGHT"
+  isHumanApproved Boolean  @default(false) // If autoSwipe is false, this needs Human approval
+  createdAt       DateTime @default(now())
+
+  @@unique([sourceAgentId, targetAgentId])
+}
